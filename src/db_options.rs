@@ -15,7 +15,7 @@
 
 
 use {BlockBasedOptions, DBCompactionStyle, DBCompressionType, DBRecoveryMode, Options,
-     WriteOptions};
+     SliceTransform, WriteOptions};
 use compaction_filter::{self, CompactionFilterCallback, CompactionFilterFn, filter_callback};
 use comparator::{self, ComparatorCallback, CompareFn};
 use ffi;
@@ -927,6 +927,18 @@ impl Options {
     pub fn set_stats_dump_period_sec(&mut self, period: c_uint) {
         unsafe {
             ffi::rocksdb_options_set_stats_dump_period_sec(self.inner, period);
+        }
+    }
+
+    pub fn set_prefix_extractor(&mut self, extractor: SliceTransform) {
+        unsafe {
+            ffi::rocksdb_options_set_prefix_extractor(self.inner, extractor.inner);
+            // Without the following line the extractor's `drop` impl, which calls the destructor
+            // on the underlying C++ SliceTransform object, would get called at the end of this
+            // function, since it's the end of that value's lifetime. We want to stop that from
+            // happening (it causes a segfault!) so we tell rust not to destruct the transform at
+            // the end of this function.
+            mem::forget(extractor);
         }
     }
 

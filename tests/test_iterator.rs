@@ -14,7 +14,7 @@
 //
 extern crate rocksdb;
 
-use rocksdb::{DB, Direction, IteratorMode, Options};
+use rocksdb::{DB, Direction, IteratorMode, Options, SliceTransform};
 
 fn cba(input: &Box<[u8]>) -> Box<[u8]> {
     input.iter().cloned().collect::<Vec<_>>().into_boxed_slice()
@@ -163,7 +163,10 @@ pub fn test_prefix_iterator() {
         let b1: Box<[u8]> = key(b"bbb1");
         let b2: Box<[u8]> = key(b"bbb2");
 
-        let db = DB::open_default(path).unwrap();
+        let mut opts = Options::default();
+        opts.set_prefix_extractor(SliceTransform::fixed_prefix(3));
+
+        let db = DB::open(&opts, path).unwrap();
 
         assert!(db.put(&*a1, &*a1).is_ok());
         assert!(db.put(&*a2, &*a2).is_ok());

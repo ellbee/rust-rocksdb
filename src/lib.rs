@@ -43,6 +43,7 @@ pub mod merge_operator;
 pub mod compaction_filter;
 mod db;
 mod db_options;
+mod slice_transform;
 
 pub use compaction_filter::Decision as CompactionDecision;
 pub use db::{DBCompactionStyle, DBCompressionType, DBIterator, DBRawIterator, DBRecoveryMode,
@@ -103,6 +104,10 @@ impl fmt::Display for Error {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         self.message.fmt(formatter)
     }
+}
+
+pub struct SliceTransform {
+    inner: *mut ffi::rocksdb_slicetransform_t
 }
 
 /// For configuring block-based file storage.
