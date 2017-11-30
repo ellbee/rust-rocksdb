@@ -529,6 +529,13 @@ impl<'a> Snapshot<'a> {
         DBIterator::new(self.db, &readopts, mode)
     }
 
+    pub fn prefix_iterator(&self, prefix: &[u8]) -> DBIterator {
+        let mut readopts = ReadOptions::default();
+        readopts.set_prefix_same_as_start(true);
+        readopts.set_snapshot(self);
+        DBIterator::new(self.db, &readopts, IteratorMode::From(prefix, Direction::Forward))
+    }
+
     pub fn iterator_cf(
         &self,
         cf_handle: ColumnFamily,
@@ -537,6 +544,19 @@ impl<'a> Snapshot<'a> {
         let mut readopts = ReadOptions::default();
         readopts.set_snapshot(self);
         DBIterator::new_cf(self.db, cf_handle, &readopts, mode)
+    }
+
+    pub fn prefix_iterator_cf(
+        &self,
+        cf_handle: ColumnFamily,
+        prefix: &[u8]
+    ) -> Result<DBIterator, Error> {
+        let mut readopts = ReadOptions::default();
+        readopts.set_prefix_same_as_start(true);
+        readopts.set_snapshot(self);
+
+        DBIterator::new_cf(
+            self.db, cf_handle, &readopts, IteratorMode::From(prefix, Direction::Forward))
     }
 
     pub fn raw_iterator(&self) -> DBRawIterator {
@@ -885,7 +905,7 @@ impl DB {
         DBIterator::new(self, &opts, mode)
     }
 
-    pub fn prefix_iterator<'a>(&self, prefix: &'a [u8]) -> DBIterator {
+    pub fn prefix_iterator<'a>(&self, prefix: &[u8]) -> DBIterator {
         let mut opts = ReadOptions::default();
         opts.set_prefix_same_as_start(true);
         DBIterator::new(self, &opts, IteratorMode::From(prefix, Direction::Forward))
@@ -903,7 +923,7 @@ impl DB {
     pub fn prefix_iterator_cf<'a>(
         &self,
         cf_handle: ColumnFamily,
-        prefix: &'a [u8]
+        prefix: &[u8]
     ) -> Result<DBIterator, Error> {
         let mut opts = ReadOptions::default();
         opts.set_prefix_same_as_start(true);
